@@ -12,13 +12,12 @@ Furthermore, the code can be modified to add rules and checks to avoid spamming.
 
 The application / Docker container is configured using environment variables:
 
-+--------------------+-----------------------------------------------+
+|--------------------|-----------------------------------------------|
 | Variable           | Description                                   |
-+--------------------+-----------------------------------------------+
+|--------------------|-----------------------------------------------|
 | `SMTP_LISTEN`      | Address to listen to, defaults to `:2525`     |
 | `CREDENTIALS_JSON` | Path to the GMail API OAuth credentials file. |
 | `TOKEN_JSON`       | Path to the access token JSON.                |
-+--------------------+-----------------------------------------------+
 
 ## Initial setup of GMail API
 
