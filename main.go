@@ -133,8 +133,7 @@ func main() {
 		Token:       "token.json",
 	}
 	if err := env.Parse(&cfg); err != nil {
-		slog.Error("Configuration error", err)
-		panic(err)
+		log.Fatalf("Configuration error: %v", err)
 	}
 
 	ctx := context.Background()
@@ -156,7 +155,6 @@ func main() {
 	}
 
 	if err := smtpd.ListenAndServe(cfg.SmtpListen, mailHandler(srv), "smtp-sidecar", ""); err != nil {
-		slog.Error("SMTP Listen error", err)
-		panic(err)
+		log.Fatalf("SMTP Listen error: %v", err)
 	}
 }
