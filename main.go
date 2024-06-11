@@ -103,7 +103,7 @@ func mailHandler(srv *gmail.Service) func(origin net.Addr, from string, to []str
 	return func(origin net.Addr, from string, to []string, data []byte) error {
 		msg, err := mail.ReadMessage(bytes.NewReader(data))
 		if err != nil {
-			slog.Warn("Unable to decode message", "error", err)
+			slog.Warn("Unable to decode message, discarding!", "error", err)
 			return nil
 		}
 		subject := msg.Header.Get("Subject")
@@ -113,6 +113,7 @@ func mailHandler(srv *gmail.Service) func(origin net.Addr, from string, to []str
 		}).Do()
 		if err != nil {
 			slog.Warn("Unable to send email", "error", err)
+			return err
 		} else {
 			slog.Info("Message sent successfully.", "to", to)
 		}
