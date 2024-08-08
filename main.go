@@ -13,6 +13,7 @@ import (
 	"net/http/httptest"
 	"net/mail"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/caarlos0/env/v6"
@@ -98,7 +99,35 @@ func saveToken(path string, token *oauth2.Token) {
 	json.NewEncoder(f).Encode(token)
 }
 
-func mailHandler(srv *gmail.Service) func(origin net.Addr, from string, to []string, data []byte) error {
+// StringToBoolMap takes a comma-separated string and returns a map[string]bool
+func stringToBoolMap(input string) map[string]bool {
+	// Create an empty map to store the result
+	result := make(map[string]bool)
+
+	// Split the input string by comma
+	elements := strings.Split(input, ",")
+
+	// Iterate over the elements and add them to the map
+	for _, element := range elements {
+		// Trim any leading or trailing whitespace from the element
+		key := strings.TrimSpace(element)
+		if key != "" {
+			result[key] = true
+		}
+	}
+
+	return result
+}
+
+func verify(needle string, haystack map[string]bool) bool {
+	if len(haystack) == 0 {
+		return true
+	}
+	_, exists := haystack[needle]
+	return exists
+}
+
+func mailHandler(srv *gmail.Service, senders map[string]bool, recipients map[string]bool) func(origin net.Addr, from string, to []string, data []byte) error {
 	slog.Info("Handler is ready.")
 	return func(origin net.Addr, from string, to []string, data []byte) error {
 		msg, err := mail.ReadMessage(bytes.NewReader(data))
@@ -108,6 +137,16 @@ func mailHandler(srv *gmail.Service) func(origin net.Addr, from string, to []str
 		}
 		subject := msg.Header.Get("Subject")
 		slog.Info("Received mail", "from", from, "to", to, "subject", subject)
+		if !verify(from, senders) {
+			slog.Warn("Ignoring email due to sender restrictions", "from", from)
+			return nil
+		}
+		for _, target := range to {
+			if !verify(target, recipients) {
+				slog.Warn("Ignoring email due to recipient restrictions", "to", target)
+				return nil
+			}
+		}
 		_, err = srv.Users.Messages.Send("me", &gmail.Message{
 			Raw: base64.StdEncoding.EncodeToString(data),
 		}).Do()
@@ -125,6 +164,8 @@ type options struct {
 	SmtpListen  string `env:"SMTP_LISTEN"`
 	Credentials string `env:"CREDENTIALS_JSON"`
 	Token       string `env:"TOKEN_JSON"`
+	Senders     string `env:"SENDERS"`
+	Recipients  string `env:"RECIPIENTS"`
 }
 
 func main() {
@@ -132,6 +173,8 @@ func main() {
 		SmtpListen:  ":2525",
 		Credentials: "credentials.json",
 		Token:       "token.json",
+		Senders:     "",
+		Recipients:  "",
 	}
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("Configuration error: %v", err)
@@ -155,7 +198,10 @@ func main() {
 		log.Fatalf("Unable to retrieve Gmail client: %v", err)
 	}
 
-	if err := smtpd.ListenAndServe(cfg.SmtpListen, mailHandler(srv), "smtp-sidecar", ""); err != nil {
+	senders := stringToBoolMap(cfg.Senders)
+	recipients := stringToBoolMap(cfg.Recipients)
+
+	if err := smtpd.ListenAndServe(cfg.SmtpListen, mailHandler(srv, senders, recipients), "smtp-sidecar", ""); err != nil {
 		log.Fatalf("SMTP Listen error: %v", err)
 	}
 }
