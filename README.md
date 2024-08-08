@@ -12,11 +12,17 @@ Furthermore, the code can be modified to add rules and checks to avoid spamming.
 
 The application / Docker container is configured using environment variables:
 
-| Variable           | Description                                   |
-|--------------------|-----------------------------------------------|
-| `SMTP_LISTEN`      | Address to listen to, defaults to `:2525`     |
-| `CREDENTIALS_JSON` | Path to the GMail API OAuth credentials file. |
-| `TOKEN_JSON`       | Path to the access token JSON.                |
+| Variable           | Description                                                      |
+|--------------------|------------------------------------------------------------------|
+| `SMTP_LISTEN`      | Address to listen to, defaults to `:2525`                        |
+| `CREDENTIALS_JSON` | Path to the GMail API OAuth credentials file.                    |
+| `TOKEN_JSON`       | Path to the access token JSON.                                   |
+| `SENDERS`          | Comma-separated list of permitted senders (empty permits all)    |
+| `RECIPIENTS`       | Comma-separated list of permitted recipients (empty permits all) |
+
+**NOTE!** If both  `SENDERS` and `RECIPIENTS` are empty, all email addresses are permitted.
+Do not combine this with listening on `:25` as all machines on your local network now can
+act as spam robots!
 
 ## Initial setup of GMail API
 
