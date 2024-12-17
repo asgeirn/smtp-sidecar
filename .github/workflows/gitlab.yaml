@@ -1,0 +1,22 @@
+on:
+  push:
+    branches:
+      - main
+jobs:
+  gitlab:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Gitlab Sync
+        # You may pin to the exact commit or the version.
+        # uses: action-pack/gitlab-sync@38077a591a7f2ceb6ff6026e6beb2954a3be0f93
+        uses: action-pack/gitlab-sync@v3
+        with:
+          # GitLab repo URL
+          url: ${{ secrets.GITLAB_URL }}
+          # GitLab username
+          username: ${{ secrets.GITLAB_USER }}
+          # GitLab token
+          token: ${{ secrets.GITLAB_TOKEN }}
