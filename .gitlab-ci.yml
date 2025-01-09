@@ -3,6 +3,16 @@
 
 image: golang:latest
 
+parallel:
+  matrix:
+    - ARCH:
+        - x86-64
+        - arm64
+
+default:
+  tags:
+    - $ARCH
+
 stages:
   - test
   - build
