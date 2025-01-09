@@ -29,11 +29,11 @@ compile:
   extends: .parallel
   stage: build
   script:
-    - mkdir -p mybinaries
-    - go build -o mybinaries ./...
+    - mkdir -p mybinaries-${ARCH}
+    - go build -o mybinaries-${ARCH} ./...
   artifacts:
     paths:
-      - mybinaries
+      - mybinaries-${ARCH}
 
 deploy:
   extends: .parallel
