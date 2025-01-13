@@ -11,12 +11,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Gitlab Sync
-        uses: kujov/gitlab-sync@338a7a19fc012aaefa316566e288f34660950373
+      - name: GitLab Mirror Action
+        uses: 0xTheProDev/gitlab-mirror@def1aeb8e8810cc65b11d1df2653286cd983f7e5
         with:
-          # GitLab repo URL
-          gitlab_url: ${{ secrets.GITLAB_URL }}
-          # GitLab username
+          # Enable this boolean flag to push Tags alongside.
+          follow-tags: true
+          # Enable this boolean flag to overwrite Git history.
+          force-push: false
+          # Provide hostname for self-hosted GitLab instance.
+          hostname: ${{ secrets.GITLAB_HOSTNAME }}
+          # Password or Access Token for GitLab User.
+          password: ${{ secrets.GITLAB_TOKEN }}
+          # Project Id for the target Repository.
+          project-id: ${{ secrets.GITLAB_PROJECT_ID }}
+          # Username for GitLab User.
           username: ${{ secrets.GITLAB_USER }}
-          # GitLab token
-          gitlab_pat: ${{ secrets.GITLAB_TOKEN }}
