@@ -3,12 +3,22 @@
 
 image: golang:latest
 
+.parallel:
+  parallel:
+    matrix:
+      - ARCH:
+          - x86-64
+          - arm64
+  tags:
+    - $ARCH
+
 stages:
   - test
   - build
   - deploy
 
 format:
+  extends: .parallel
   stage: test
   script:
     - go fmt $(go list ./... | grep -v /vendor/)
@@ -16,15 +26,17 @@ format:
     - go test -race $(go list ./... | grep -v /vendor/)
 
 compile:
+  extends: .parallel
   stage: build
   script:
-    - mkdir -p mybinaries
-    - go build -o mybinaries ./...
+    - mkdir -p ${CI_PROJECT_NAME}-${ARCH}
+    - go build -o ${CI_PROJECT_NAME}-${ARCH} ./...
   artifacts:
     paths:
-      - mybinaries
+      - ${CI_PROJECT_NAME}-${ARCH}
 
 deploy:
+  extends: .parallel
   stage: deploy
   script: echo "Define your deployment script!"
   environment: production
