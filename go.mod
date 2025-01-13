@@ -1,7 +1,8 @@
 module twingine.no/smtp-sidecar/v2
 
-go 1.21.5
-toolchain go1.22.5
+go 1.22
+
+toolchain go1.23.4
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
