@@ -1,0 +1,7 @@
+{
+  "name": "Nixery Devbox",
+  "image": "nixery.dev/shell/devbox",
+  "initializeCommand": [
+    "devbox shell"
+  ]
+}
