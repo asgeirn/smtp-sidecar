@@ -1,4 +1,9 @@
 {
-  "name": "Coder.com Enterprise Goland (Ubuntu)",
-  "image": "codercom/enterprise-goland:ubuntu"
+  "name": "Coder.com Enterprise Minimal (Ubuntu)",
+  "image": "codercom/enterprise-minimal:ubuntu",
+  "onCreateCommand": [
+    "bash",
+    "-c",
+    "apt-get update && apt-get install -y golang"
+  ]
 }
