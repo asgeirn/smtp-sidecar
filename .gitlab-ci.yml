@@ -70,8 +70,8 @@ deploy:
       set -x
       for ARCH in amd64 arm64; do
         container=$(buildah from scratch)
-        buildah copy $container ${CI_PROJECT_NAME}-linux-${ARCH} /
-        buildah config --arch ${ARCH} --entrypoint '["/${CI_PROJECT_NAME}-linux-${ARCH}"]' $container
+        buildah copy $container ${CI_PROJECT_NAME}-linux-${ARCH} /smtp-sidecar
+        buildah config --arch ${ARCH} --entrypoint '["/smtp-sidecar"]' $container
         buildah commit --manifest ${IMAGE} $container ${IMAGE}-${ARCH}
       done
     - buildah manifest push ${IMAGE}
