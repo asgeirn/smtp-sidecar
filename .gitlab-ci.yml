@@ -70,6 +70,6 @@ deploy:
         container=$(buildah from scratch)
         buildah copy $container ${CI_PROJECT_NAME}-linux-${ARCH} /
         buildah config --arch ${ARCH} --entrypoint "['/${CI_PROJECT_NAME}-linux-${ARCH}']" $container
-        buildah commit --manifest ${IMAGE} $container ${IMAGE}
+        buildah commit --manifest ${IMAGE} $container ${IMAGE}-${ARCH}
       done
     - buildah manifest push ${IMAGE}
