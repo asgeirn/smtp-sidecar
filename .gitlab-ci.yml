@@ -36,3 +36,23 @@ compile:
   artifacts:
     paths:
       - ${CI_PROJECT_NAME}-${GOOS}-${GOARCH}
+
+deploy:
+  stage: deploy
+  image: quay.twingine.com/asgeir/coder/buildah
+  needs:
+    - job: compile
+      parallel:
+        matrix:
+        - GOARCH:
+            - amd64
+            - arm64
+          GOOS:
+            - darwin
+            - linux
+      artifacts: true
+  variables:
+    GIT_STRATEGY: empty
+  script:
+    - ls -l
+    - container=$(buildah from scratch)
