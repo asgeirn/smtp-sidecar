@@ -60,6 +60,16 @@ deploy:
       artifacts: true
   variables:
     GIT_STRATEGY: empty
+    IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}
   script:
     - ls -l
-    - container=$(buildah from scratch)
+    - buildah login -u=${REGISTRY_USER} -p=${REGISTRY_AUTH} ${REGISTRY}
+    - buildah manifest create ${IMAGE}
+    - |
+      for ARCH in amd64 arm64; do
+        container=$(buildah from scratch)
+        buildah copy ${CI_PROJECT_NAME}-linux-${ARCH} /
+        buildah config --arch ${ARCH} --entrypoint "['/${CI_PROJECT_NAME}-linux-${ARCH}']" $container
+        buildah commit --manifest ${IMAGE} ${IMAGE} $container
+      done
+    - buildah manifest push ${IMAGE}
