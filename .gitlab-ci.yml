@@ -31,7 +31,6 @@ compile:
   extends: .parallel
   stage: build
   script:
-    - mkdir -p ${CI_PROJECT_NAME}-${GOOS}-${GOARCH}
     - go build -o ${CI_PROJECT_NAME}-${GOOS}-${GOARCH} ./...
   artifacts:
     paths:
@@ -48,7 +47,6 @@ deploy:
             - amd64
             - arm64
           GOOS:
-            - darwin
             - linux
       artifacts: true
   variables:
