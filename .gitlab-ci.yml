@@ -46,6 +46,8 @@ compile:
 deploy:
   stage: deploy
   image: quay.twingine.com/asgeir/coder/buildah
+  tags:
+    - k8s
   needs:
     - job: compile
       parallel:
