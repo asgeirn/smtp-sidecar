@@ -63,11 +63,9 @@ deploy:
     GIT_STRATEGY: empty
     IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}
   script:
-    - ls -l
     - buildah login -u=${REGISTRY_USER} -p=${REGISTRY_AUTH} ${REGISTRY}
     - buildah manifest create ${IMAGE}
     - |
-      set -x
       for ARCH in amd64 arm64; do
         container=$(buildah from scratch)
         buildah copy $container ${CI_PROJECT_NAME}-linux-${ARCH} /smtp-sidecar
