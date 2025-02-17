@@ -23,7 +23,7 @@ github:
     - git remote add github ${GITHUB_REPO}
     - git fetch github ${GITHUB_REF}
     - git checkout -b merge-${CI_PIPELINE_IID}
-    - git merge --squash github/${GITHUB_REF}
+    - git merge --commit ${GITHUB_REF}
 
 stages:
   - test
