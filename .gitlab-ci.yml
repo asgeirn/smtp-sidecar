@@ -13,21 +13,6 @@ image: golang:latest
   tags:
     - k8s
 
-github:
-  stage: .pre
-  image: alpine
-  rules:
-    - if: $CI_PIPELINE_TRIGGERED
-  script:
-    - apk add --no-cache git
-    - git config user.email "${GITLAB_USER_EMAIL}"
-    - git config user.name "${GITLAB_USER_NAME}"
-    - git remote add github ${GITHUB_REPO}
-    - git fetch github
-    - git checkout -b merge-${CI_PIPELINE_IID}
-    - git merge --no-commit ${GITHUB_REF}
-    - git commit --author "${CI_COMMIT_AUTHOR}" -m "Merged by ${CI_PIPELINE_IID}"
-
 stages:
   - test
   - build
