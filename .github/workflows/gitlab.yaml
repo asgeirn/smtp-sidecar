@@ -27,4 +27,4 @@ jobs:
           # Pipeline Access Token, see https://docs.gitlab.com/ee/user/project/settings/project_access_tokens.html
           # access_token: # optional, default is 
           # A map of key-valued strings containing the pipeline variables. For example: { VAR1: "value1", VAR2: "value2" }.
-          variables: "{ \"GITHUB_REPO\": \"${{ github.server_url }}/${{ github.repository }}.git\", \"GITHUB_REF\": \"${{ github.sha }}\" }"
+          variables: "{ \"GITHUB_REPO\": \"${{ github.server_url }}/${{ github.repository }}.git\", \"GITHUB_REF\": \"${{ github.ref }}\" }"
