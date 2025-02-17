@@ -1,16 +1,17 @@
-# This specific template is located at:
-# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Go.gitlab-ci.yml
-
 image: golang:latest
 
 .parallel:
+  variables:
   parallel:
     matrix:
-      - ARCH:
-          - x86-64
+      - GOARCH:
+          - amd64
           - arm64
+        GOOS:
+          - darwin
+          - linux
   tags:
-    - $ARCH
+    - k8s
 
 stages:
   - test
@@ -18,8 +19,9 @@ stages:
   - deploy
 
 format:
-  extends: .parallel
   stage: test
+  tags:
+    - k8s
   script:
     - go fmt $(go list ./... | grep -v /vendor/)
     - go vet $(go list ./... | grep -v /vendor/)
@@ -28,15 +30,46 @@ format:
 compile:
   extends: .parallel
   stage: build
+  variables:
+    TARGET: ${CI_PROJECT_NAME}-${GOOS}-${GOARCH}
+    CGO_ENABLED: "0"
   script:
-    - mkdir -p ${CI_PROJECT_NAME}-${ARCH}
-    - go build -o ${CI_PROJECT_NAME}-${ARCH} ./...
+    - go build -o ${TARGET} ./...
+    - |
+      curl --fail --location --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+        --cacert /etc/gitlab-runner/certs/ca.crt \
+        --upload-file ${TARGET} \
+        ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_NAME}/${CI_PIPELINE_IID}/${TARGET}
   artifacts:
     paths:
-      - ${CI_PROJECT_NAME}-${ARCH}
+      - ${TARGET}
 
 deploy:
-  extends: .parallel
   stage: deploy
-  script: echo "Define your deployment script!"
-  environment: production
+  image: quay.twingine.com/asgeir/coder/buildah
+  tags:
+    - k8s
+  needs:
+    - job: compile
+      parallel:
+        matrix:
+        - GOARCH:
+            - amd64
+            - arm64
+          GOOS:
+            - linux
+      artifacts: true
+  variables:
+    GIT_STRATEGY: empty
+    IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}
+  script:
+    - buildah login -u=${REGISTRY_USER} -p=${REGISTRY_AUTH} ${REGISTRY}
+    - buildah manifest create ${IMAGE}
+    - |
+      for ARCH in amd64 arm64; do
+        container=$(buildah from scratch)
+        buildah copy $container ${CI_PROJECT_NAME}-linux-${ARCH} /smtp-sidecar
+        buildah config --arch ${ARCH} --entrypoint '["/smtp-sidecar"]' $container
+        buildah commit --manifest ${IMAGE} $container ${IMAGE}-${ARCH}
+      done
+    - buildah manifest push ${IMAGE}
