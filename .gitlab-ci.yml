@@ -21,9 +21,8 @@ github:
   script:
     - apk add --no-cache git
     - git remote add github ${GITHUB_REPO}
-    - git fetch github
-    - git checkout -b remote-merge-${CI_PIPELINE_IID} github/${GITHUB_REF}
-    - git merge --squash --commit --no-edit --ff-only -m "Merged by ${CI_PIPELINE_URL}"
+    - git fetch github ${GITHUB_REF}
+    - git merge --squash github/${GITHUB_REF}
 
 stages:
   - test
