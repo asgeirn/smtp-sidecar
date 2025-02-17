@@ -22,6 +22,7 @@ github:
     - apk add --no-cache git
     - git remote add github ${GITHUB_REPO}
     - git fetch github ${GITHUB_REF}
+    - git checkout -b merge-${CI_PIPELINE_IID}
     - git merge --squash github/${GITHUB_REF}
 
 stages:
