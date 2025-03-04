@@ -1,15 +1,23 @@
 image: golang:latest
 
+.go-cache:
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.cache
+  cache:
+    paths:
+      - .cache
+
 .parallel:
+  extends: .go-cache
   variables:
   parallel:
     matrix:
       - GOARCH:
           - amd64
           - arm64
-        GOOS:
-          - darwin
-          - linux
+        GOOS: linux
+      - GOARCH: arm64
+        GOOS: darwin
   tags:
     - k8s
 
@@ -19,6 +27,7 @@ stages:
   - deploy
 
 format:
+  extends: .go-cache
   stage: test
   tags:
     - k8s
