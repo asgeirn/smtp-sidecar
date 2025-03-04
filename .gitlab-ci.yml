@@ -93,7 +93,7 @@ include:
 grype:
   extends: .grype_image
   needs:
-    - job: container
+    - job: deploy
       artifacts: true
   variables:
     TARGET: sbom.json
@@ -105,7 +105,7 @@ grype:
 trivy:
   extends: .trivy_image
   needs:
-    - job: container
+    - job: deploy
       artifacts: false
   variables:
     TARGET: ${REGISTRY}/${CI_PROJECT_PATH}:latest
