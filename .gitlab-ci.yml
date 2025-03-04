@@ -18,9 +18,6 @@ image: golang:latest
         GOOS: linux
       - GOARCH: arm64
         GOOS: darwin
-      - GOOS: linux
-        GOARCH: arm
-        GOARM: "7"
   tags:
     - k8s
 
@@ -45,7 +42,7 @@ compile:
   extends: .parallel
   stage: build
   variables:
-    TARGET: ${CI_PROJECT_NAME}-${GOOS}-${GOARCH}${GOARM}
+    TARGET: ${CI_PROJECT_NAME}-${GOOS}-${GOARCH}
     CGO_ENABLED: "0"
   script:
     - go build -o ${TARGET} ./...
