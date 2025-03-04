@@ -84,10 +84,15 @@ deploy:
         container=$(buildah from scratch)
         buildah copy $container ${CI_PROJECT_NAME}-linux-${ARCH} /smtp-sidecar
         buildah config --arch ${ARCH} --entrypoint '["/smtp-sidecar"]' $container
-        buildah commit --manifest ${IMAGE} $container ${IMAGE}-${ARCH}
+        buildah commit --manifest ${IMAGE} --sbom syft --sbom-image-output /sbom.json --sbom-output sbom-${ARCH}.json $container ${IMAGE}-${ARCH}
       done
     - buildah manifest push ${IMAGE}
-
+  artifacts:
+    reports:
+      cyclonedx: sbom-*.json
+    paths:
+      - sbom-*.json
+  
 include:
   - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SCA/grype_sbom.yml
   - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SCA/trivy_image.yml
@@ -99,7 +104,7 @@ grype:
     - job: deploy
       artifacts: true
   variables:
-    TARGET: sbom.json
+    TARGET: sbom-amd64.json
     REPORT_NAME: grype.json
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
     SO_PRODUCT_NAME: SMTP Sidecar
