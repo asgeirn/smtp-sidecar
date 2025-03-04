@@ -22,13 +22,15 @@ image: golang:latest
     - k8s
 
 stages:
-  - test
+  - verify
   - build
   - deploy
+  - test
+  - post_test
 
 format:
   extends: .go-cache
-  stage: test
+  stage: verify
   tags:
     - k8s
   script:
@@ -82,3 +84,39 @@ deploy:
         buildah commit --manifest ${IMAGE} $container ${IMAGE}-${ARCH}
       done
     - buildah manifest push ${IMAGE}
+
+include:
+  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SCA/grype_sbom.yml
+  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SCA/trivy_image.yml
+  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/check_security_gate.yml
+
+grype:
+  extends: .grype_image
+  needs:
+    - job: container
+      artifacts: true
+  variables:
+    TARGET: sbom.json
+    REPORT_NAME: grype.json
+    SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
+    SO_PRODUCT_NAME: SMTP Sidecar
+    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${REGISTRY}/${CI_PROJECT_PATH}:latest
+
+trivy:
+  extends: .trivy_image
+  needs:
+    - job: container
+      artifacts: false
+  variables:
+    TARGET: ${REGISTRY}/${CI_PROJECT_PATH}:latest
+    REPORT_NAME: trivy.json
+    SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
+    SO_PRODUCT_NAME: SMTP Sidecar
+    TRIVY_USERNAME: ${REGISTRY_USER}
+    TRIVY_PASSWORD: ${REGISTRY_AUTH}
+
+check:
+  extends: .check_security_gate
+  variables:
+    SO_PRODUCT_NAME: SMTP Sidecar
+    SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
