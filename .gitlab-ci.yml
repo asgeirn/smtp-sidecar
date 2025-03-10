@@ -74,7 +74,6 @@ deploy:
     GIT_STRATEGY: empty
     IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}
   script:
-    - buildah login -u=${REGISTRY_USER} -p=${REGISTRY_AUTH} ${REGISTRY}
     - buildah manifest create ${IMAGE}
     - |
       for ARCH in amd64 arm64; do
