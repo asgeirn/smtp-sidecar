@@ -90,10 +90,21 @@ deploy:
       - sbom-*.json
   
 include:
+  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SAST/semgrep.yml	
   - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SCA/grype_sbom.yml
   - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SCA/trivy_image.yml
   - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/check_security_gate.yml
 
+semgrep:
+  extends: .semgrep
+  variables:
+    SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
+    SO_PRODUCT_NAME: SMTP Sidecar
+    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${REGISTRY}/${CI_PROJECT_PATH}:latest
+    CONFIGURATION: ${SEMGREP_CONFIG}
+    TARGET: .
+    REPORT_NAME: semgrep.json
+  
 grype:
   extends: .grype_image
   needs:
