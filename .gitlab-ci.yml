@@ -129,6 +129,8 @@ trivy:
     SO_PRODUCT_NAME: SMTP Sidecar
     TRIVY_USERNAME: ${REGISTRY_USER}
     TRIVY_PASSWORD: ${REGISTRY_AUTH}
+    SO_SUPPRESS_LICENSES: "false"
+    FURTHER_PARAMETERS: --vex repo
 
 check:
   extends: .check_security_gate
