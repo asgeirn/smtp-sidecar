@@ -1,6 +1,6 @@
 {
   "name": "Coder.com Enterprise Minimal (Ubuntu)",
-  "image": "codercom/enterprise-minimal:ubuntu",
+  "image": "quay.twingine.com/docker/codercom/enterprise-minimal:ubuntu",
   "onCreateCommand": [
     "bash",
     "-c",
