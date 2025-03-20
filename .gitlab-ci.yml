@@ -34,9 +34,14 @@ format:
   tags:
     - k8s
   script:
+    - go install github.com/jstemmer/go-junit-report/v2@latest
     - go fmt $(go list ./... | grep -v /vendor/)
     - go vet $(go list ./... | grep -v /vendor/)
-    - go test -race $(go list ./... | grep -v /vendor/)
+    - go test -race -json $(go list ./... | grep -v /vendor/) 2>&1 | go-junit-report -parser gojson -set-exit-code > report.xml
+  artifacts:
+    reports:
+      junit: 
+        - report.xml
 
 compile:
   extends: .parallel
@@ -64,11 +69,11 @@ deploy:
     - job: compile
       parallel:
         matrix:
-        - GOARCH:
-            - amd64
-            - arm64
-          GOOS:
-            - linux
+          - GOARCH:
+              - amd64
+              - arm64
+            GOOS:
+              - linux
       artifacts: true
   variables:
     GIT_STRATEGY: empty
@@ -88,10 +93,10 @@ deploy:
       cyclonedx: sbom-*.json
     paths:
       - sbom-*.json
-  
+
 include:
   - template: Jobs/SAST.gitlab-ci.yml
-  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SAST/semgrep.yml	
+  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SAST/semgrep.yml
   - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SCA/grype_sbom.yml
   - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SCA/trivy_image.yml
   - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/check_security_gate.yml
@@ -105,7 +110,7 @@ semgrep:
     CONFIGURATION: ${SEMGREP_CONFIG}
     TARGET: .
     REPORT_NAME: semgrep.json
-  
+
 grype:
   extends: .grype_image
   needs:
