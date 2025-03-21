@@ -35,7 +35,7 @@ test:
     - k8s
   variables:
     OTEL_SERVICE_NAME: ${CI_PROJECT_NAME}
-    OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-cluster-opentelemetry-collector.default:4318
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-cluster-opentelemetry-collector.default:4317
   script:
     - go install github.com/jstemmer/go-junit-report/v2@latest
     - go install github.com/mdelapenya/junit2otlp@latest
