@@ -23,6 +23,7 @@ image: golang:latest
 
 stages:
   - verify
+  - upload
   - build
   - deploy
   - test
@@ -39,14 +40,20 @@ test:
   script:
     - go install github.com/jstemmer/go-junit-report/v2@latest
     - go install github.com/mdelapenya/junit2otlp@latest
+    - go install golang.org/x/vuln/cmd/govulncheck@latest
     - go fmt $(go list ./... | grep -v /vendor/)
     - go vet $(go list ./... | grep -v /vendor/)
+    - $GOPATH/bin/govulncheck -format sarif ./... > vulns.sarif.json
     - |
       go test -race -json $(go list ./... | grep -v /vendor/) 2>&1 | \
       $GOPATH/bin/go-junit-report -parser gojson | tee report.xml | \
       $GOPATH/bin/junit2otlp
   artifacts:
+    paths:
+      - vulns.sarif.json
     reports:
+      sast:
+        - vulns.sarif.json
       junit: 
         - report.xml
 
@@ -103,10 +110,23 @@ deploy:
 
 include:
   - template: Jobs/SAST.gitlab-ci.yml
+  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/importer.yml
   - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SAST/semgrep.yml
   - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SCA/grype_sbom.yml
   - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SCA/trivy_image.yml
   - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/check_security_gate.yml
+
+govulncheck:
+  extends: .importer
+  variables:
+    SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
+    SO_PRODUCT_NAME: SMTP Sidecar
+    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${REGISTRY}/${CI_PROJECT_PATH}:latest
+    SO_FILE_NAME: vulns.sarif.json
+    SO_PARSER_NAME: sarif
+  needs:
+    - job: test
+      artifacts: true
 
 semgrep:
   extends: .semgrep
