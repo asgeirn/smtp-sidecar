@@ -45,6 +45,9 @@ jobs:
       - name: Test
         run: go test -race ./...
 
+      - name: govulncheck
+        uses: golang/govulncheck-action@v1.0.1
+
       # Set up BuildKit Docker container builder to be able to build
       # multi-platform images and export cache
       # https://github.com/docker/setup-buildx-action
