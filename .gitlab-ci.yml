@@ -149,6 +149,7 @@ grype:
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
     SO_PRODUCT_NAME: SMTP Sidecar
     SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${REGISTRY}/${CI_PROJECT_PATH}:latest
+    SO_SUPPRESS_LICENSES: "false"
 
 trivy:
   extends: .trivy_image
