@@ -123,7 +123,7 @@ govulncheck:
     SO_PRODUCT_NAME: SMTP Sidecar
     SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${REGISTRY}/${CI_PROJECT_PATH}:latest
     SO_FILE_NAME: vulns.sarif.json
-    SO_PARSER_NAME: sarif
+    SO_PARSER_NAME: SARIF
   needs:
     - job: test
       artifacts: true
