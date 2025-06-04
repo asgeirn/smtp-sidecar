@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/caarlos0/env/v6"
+	"github.com/caarlos0/env/v11"
 	"github.com/mhale/smtpd"
 
 	"golang.org/x/oauth2"
