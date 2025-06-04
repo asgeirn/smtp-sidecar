@@ -1,5 +1,18 @@
 image: golang:latest
 
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+      variables:
+        IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}:mr-${CI_MERGE_REQUEST_IID}
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
+      variables:
+        IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}:latest
+
 .go-cache:
   variables:
     GOPATH: $CI_PROJECT_DIR/.cache
@@ -91,7 +104,6 @@ deploy:
       artifacts: true
   variables:
     GIT_STRATEGY: empty
-    IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}
   script:
     - buildah manifest create ${IMAGE}
     - |
@@ -121,7 +133,7 @@ govulncheck:
   variables:
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
     SO_PRODUCT_NAME: SMTP Sidecar
-    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${REGISTRY}/${CI_PROJECT_PATH}:latest
+    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${IMAGE}
     SO_FILE_NAME: vulns.sarif.json
     SO_PARSER_NAME: SARIF
   needs:
@@ -133,7 +145,7 @@ semgrep:
   variables:
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
     SO_PRODUCT_NAME: SMTP Sidecar
-    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${REGISTRY}/${CI_PROJECT_PATH}:latest
+    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${IMAGE}
     CONFIGURATION: ${SEMGREP_CONFIG}
     TARGET: .
     REPORT_NAME: semgrep.json
@@ -148,7 +160,7 @@ grype:
     REPORT_NAME: grype.json
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
     SO_PRODUCT_NAME: SMTP Sidecar
-    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${REGISTRY}/${CI_PROJECT_PATH}:latest
+    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${IMAGE}
     SO_SUPPRESS_LICENSES: "false"
 
 trivy:
@@ -157,7 +169,7 @@ trivy:
     - job: deploy
       artifacts: false
   variables:
-    TARGET: ${REGISTRY}/${CI_PROJECT_PATH}:latest
+    TARGET: ${IMAGE}
     REPORT_NAME: trivy.json
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
     SO_PRODUCT_NAME: SMTP Sidecar
