@@ -67,7 +67,7 @@ test:
     reports:
       sast:
         - vulns.sarif.json
-      junit: 
+      junit:
         - report.xml
 
 compile:
@@ -113,12 +113,33 @@ deploy:
         buildah config --arch ${ARCH} --entrypoint '["/smtp-sidecar"]' $container
         buildah commit --manifest ${IMAGE} --sbom syft --sbom-image-output /sbom.json --sbom-output sbom-${ARCH}.json $container ${IMAGE}-${ARCH}
       done
-    - buildah manifest push ${IMAGE}
+    - buildah manifest push --digestfile image.dgst ${IMAGE}
   artifacts:
     reports:
       cyclonedx: sbom-*.json
     paths:
       - sbom-*.json
+      - image.dgst
+
+sign:
+  image: ${REGISTRY}/docker/library/alpine
+  stage: deploy
+  variables:
+    GIT_STRATEGY: empty
+    REGISTRY_AUTH_FILE: ${CI_PROJECT_DIR}/auth.json
+  rules:
+    - needs:
+        - job: deploy
+          artifacts: true
+  script:
+    - apk --update add cosign curl
+    - cosign generate-key-pair
+    - curl --data-binary @cosign.pub -X POST -u "${REGISTRY_USER}:${REGISTRY_AUTH}" "https://${REGISTRY}/v2/_zot/ext/cosign"
+    - cosign login ${REGISTRY} -u ${REGISTRY_USER} -p ${REGISTRY_AUTH}
+    - cosign sign --key cosign.key --tlog-upload=false --recursive ${IMAGE}@$(cat image.dgst)
+  artifacts:
+    paths:
+      - cosign.pub
 
 include:
   - template: Jobs/SAST.gitlab-ci.yml
