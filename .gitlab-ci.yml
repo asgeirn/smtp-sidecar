@@ -1,4 +1,17 @@
-image: golang:latest
+image: zot.twingine.com/docker/library/golang:1.24.4-bookworm
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+      variables:
+        IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}:mr-${CI_MERGE_REQUEST_IID}
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
+      variables:
+        IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}:latest
 
 .go-cache:
   variables:
@@ -54,7 +67,7 @@ test:
     reports:
       sast:
         - vulns.sarif.json
-      junit: 
+      junit:
         - report.xml
 
 compile:
@@ -91,7 +104,6 @@ deploy:
       artifacts: true
   variables:
     GIT_STRATEGY: empty
-    IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}
   script:
     - buildah manifest create ${IMAGE}
     - |
@@ -101,12 +113,33 @@ deploy:
         buildah config --arch ${ARCH} --entrypoint '["/smtp-sidecar"]' $container
         buildah commit --manifest ${IMAGE} --sbom syft --sbom-image-output /sbom.json --sbom-output sbom-${ARCH}.json $container ${IMAGE}-${ARCH}
       done
-    - buildah manifest push ${IMAGE}
+    - buildah manifest push --digestfile image.dgst ${IMAGE}
   artifacts:
     reports:
       cyclonedx: sbom-*.json
     paths:
       - sbom-*.json
+      - image.dgst
+
+sign:
+  image: ${REGISTRY}/docker/library/alpine
+  stage: deploy
+  variables:
+    GIT_STRATEGY: empty
+    REGISTRY_AUTH_FILE: ${CI_PROJECT_DIR}/auth.json
+  rules:
+    - needs:
+        - job: deploy
+          artifacts: true
+  script:
+    - apk --update add cosign curl
+    - cosign generate-key-pair
+    - curl --data-binary @cosign.pub -X POST -u "${REGISTRY_USER}:${REGISTRY_AUTH}" "https://${REGISTRY}/v2/_zot/ext/cosign"
+    - cosign login ${REGISTRY} -u ${REGISTRY_USER} -p ${REGISTRY_AUTH}
+    - cosign sign --key cosign.key --tlog-upload=false --recursive ${IMAGE}@$(cat image.dgst)
+  artifacts:
+    paths:
+      - cosign.pub
 
 include:
   - template: Jobs/SAST.gitlab-ci.yml
@@ -121,7 +154,7 @@ govulncheck:
   variables:
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
     SO_PRODUCT_NAME: SMTP Sidecar
-    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${REGISTRY}/${CI_PROJECT_PATH}:latest
+    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${IMAGE}
     SO_FILE_NAME: vulns.sarif.json
     SO_PARSER_NAME: SARIF
   needs:
@@ -133,7 +166,7 @@ semgrep:
   variables:
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
     SO_PRODUCT_NAME: SMTP Sidecar
-    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${REGISTRY}/${CI_PROJECT_PATH}:latest
+    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${IMAGE}
     CONFIGURATION: ${SEMGREP_CONFIG}
     TARGET: .
     REPORT_NAME: semgrep.json
@@ -148,7 +181,7 @@ grype:
     REPORT_NAME: grype.json
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
     SO_PRODUCT_NAME: SMTP Sidecar
-    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${REGISTRY}/${CI_PROJECT_PATH}:latest
+    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${IMAGE}
     SO_SUPPRESS_LICENSES: "false"
 
 trivy:
@@ -157,7 +190,7 @@ trivy:
     - job: deploy
       artifacts: false
   variables:
-    TARGET: ${REGISTRY}/${CI_PROJECT_PATH}:latest
+    TARGET: ${IMAGE}
     REPORT_NAME: trivy.json
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
     SO_PRODUCT_NAME: SMTP Sidecar
