@@ -1,9 +1,9 @@
 module twingine.no/smtp-sidecar/v2
 
-go 1.24.0
+go 1.24.4
 
 require (
-	github.com/caarlos0/env/v6 v6.10.1
+	github.com/caarlos0/env/v11 v11.3.1
 	github.com/mhale/smtpd v0.8.3
 	golang.org/x/oauth2 v0.30.0
 	google.golang.org/api v0.238.0
