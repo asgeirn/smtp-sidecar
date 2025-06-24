@@ -144,17 +144,18 @@ sign:
 # MegaLinter GitLab CI job configuration file
 # More info at https://megalinter.io/
 
-mega-linter:
+megalinter:
   stage: test
   # You can override MegaLinter flavor used to have faster performances
   # More info at https://megalinter.io/flavors/
   image: ${REGISTRY}/docker/oxsecurity/megalinter-security:v8.8.0
-  script: ["true"] # if script: ["true"] doesn't work, you may try ->  script: [ "/bin/bash /entrypoint.sh" ]
+  script: ["/bin/bash /entrypoint.sh"]
   variables:
     # All available variables are described in documentation
     # https://megalinter.io/configuration/
     DEFAULT_WORKSPACE: $CI_PROJECT_DIR
     # ADD YOUR CUSTOM ENV VARIABLES HERE TO OVERRIDE VALUES OF .mega-linter.yml AT THE ROOT OF YOUR REPOSITORY
+    SARIF_REPORTER: "true"
   artifacts:
     when: always
     paths:
@@ -179,6 +180,18 @@ govulncheck:
     SO_PARSER_NAME: SARIF
   needs:
     - job: test
+      artifacts: true
+
+megalinter-reports:
+  extends: .importer
+  variables:
+    SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
+    SO_PRODUCT_NAME: SMTP Sidecar
+    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${IMAGE}
+    SO_FILE_NAME: megalinter-reports/megalinter-report.sarif
+    SO_PARSER_NAME: SARIF
+  needs:
+    - job: megalinter
       artifacts: true
 
 semgrep:
