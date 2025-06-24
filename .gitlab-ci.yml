@@ -184,6 +184,7 @@ govulncheck:
 
 megalinter-reports:
   extends: .importer
+  stage: test
   variables:
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
     SO_PRODUCT_NAME: SMTP Sidecar
