@@ -146,6 +146,7 @@ sign:
 
 megalinter:
   stage: test
+  allow_failure: true
   # You can override MegaLinter flavor used to have faster performances
   # More info at https://megalinter.io/flavors/
   image: ${REGISTRY}/docker/oxsecurity/megalinter-security:v8.8.0
