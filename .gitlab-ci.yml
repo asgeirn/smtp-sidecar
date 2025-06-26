@@ -89,7 +89,7 @@ compile:
 
 deploy:
   stage: deploy
-  image: ${REGISTRY}/asgeir/coder/buildah
+  image: ${REGISTRY}/twingine/coder/buildah
   tags:
     - k8s
   needs:
@@ -143,7 +143,6 @@ sign:
 
 # MegaLinter GitLab CI job configuration file
 # More info at https://megalinter.io/
-
 megalinter:
   stage: test
   allow_failure: true
