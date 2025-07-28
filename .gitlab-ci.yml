@@ -39,6 +39,7 @@ stages:
   - upload
   - build
   - deploy
+  - sign
   - test
   - post_test
 
@@ -114,16 +115,17 @@ deploy:
         buildah commit --manifest ${IMAGE} --sbom syft --sbom-image-output /sbom.json --sbom-output sbom-${ARCH}.json $container ${IMAGE}-${ARCH}
       done
     - buildah manifest push --digestfile image.dgst ${IMAGE}
+    - echo IMAGE_DIGEST=$(cat image.dgst) >> build.env
   artifacts:
     reports:
       cyclonedx: sbom-*.json
+      dotenv: build.env
     paths:
       - sbom-*.json
-      - image.dgst
 
 sign:
   image: ${REGISTRY}/docker/library/alpine
-  stage: deploy
+  stage: sign
   variables:
     GIT_STRATEGY: empty
     REGISTRY_AUTH_FILE: ${CI_PROJECT_DIR}/auth.json
@@ -136,7 +138,7 @@ sign:
     - cosign generate-key-pair
     - curl --data-binary @cosign.pub -X POST -u "${REGISTRY_USER}:${REGISTRY_AUTH}" "https://${REGISTRY}/v2/_zot/ext/cosign"
     - cosign login ${REGISTRY} -u ${REGISTRY_USER} -p ${REGISTRY_AUTH}
-    - cosign sign --key cosign.key --tlog-upload=false --recursive ${IMAGE}@$(cat image.dgst)
+    - cosign sign --key cosign.key --tlog-upload=false --recursive ${IMAGE}@${IMAGE_DIGEST}
   artifacts:
     paths:
       - cosign.pub
@@ -223,9 +225,9 @@ trivy:
   extends: .trivy_image
   needs:
     - job: deploy
-      artifacts: false
+      artifacts: true
   variables:
-    TARGET: ${IMAGE}
+    TARGET: ${IMAGE}@${IMAGE_DIGEST}
     REPORT_NAME: trivy.json
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
     SO_PRODUCT_NAME: SMTP Sidecar
