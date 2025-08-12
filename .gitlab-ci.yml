@@ -1,4 +1,4 @@
-image: zot.twingine.com/docker/library/golang:1.24.4-bookworm
+image: ${REGISTRY}/cgr/chainguard/go:latest-dev
 
 workflow:
   rules:
