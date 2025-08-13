@@ -1,4 +1,4 @@
-image: ${REGISTRY}/docker/library/golang:1.24.6-bookworm
+image: ${REGISTRY}/docker/library/golang:1.25rc3-bullseye
 
 workflow:
   rules:
