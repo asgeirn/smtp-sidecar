@@ -46,6 +46,8 @@ stages:
 test:
   extends: .go-cache
   stage: verify
+  cache:
+    policy: push
   tags:
     - k8s
   variables:
