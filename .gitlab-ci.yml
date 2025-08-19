@@ -1,4 +1,4 @@
-image: zot.twingine.com/docker/library/golang:1.24.4-bookworm
+image: ${REGISTRY}/docker/library/golang:1.25.0-trixie
 
 workflow:
   rules:
@@ -39,12 +39,15 @@ stages:
   - upload
   - build
   - deploy
+  - sign
   - test
   - post_test
 
 test:
   extends: .go-cache
   stage: verify
+  cache:
+    policy: push
   tags:
     - k8s
   variables:
@@ -89,7 +92,7 @@ compile:
 
 deploy:
   stage: deploy
-  image: ${REGISTRY}/asgeir/coder/buildah
+  image: ${REGISTRY}/twingine/coder/buildah
   tags:
     - k8s
   needs:
@@ -114,16 +117,17 @@ deploy:
         buildah commit --manifest ${IMAGE} --sbom syft --sbom-image-output /sbom.json --sbom-output sbom-${ARCH}.json $container ${IMAGE}-${ARCH}
       done
     - buildah manifest push --digestfile image.dgst ${IMAGE}
+    - echo IMAGE_DIGEST=$(cat image.dgst) >> build.env
   artifacts:
     reports:
       cyclonedx: sbom-*.json
+      dotenv: build.env
     paths:
       - sbom-*.json
-      - image.dgst
 
 sign:
   image: ${REGISTRY}/docker/library/alpine
-  stage: deploy
+  stage: sign
   variables:
     GIT_STRATEGY: empty
     REGISTRY_AUTH_FILE: ${CI_PROJECT_DIR}/auth.json
@@ -136,10 +140,32 @@ sign:
     - cosign generate-key-pair
     - curl --data-binary @cosign.pub -X POST -u "${REGISTRY_USER}:${REGISTRY_AUTH}" "https://${REGISTRY}/v2/_zot/ext/cosign"
     - cosign login ${REGISTRY} -u ${REGISTRY_USER} -p ${REGISTRY_AUTH}
-    - cosign sign --key cosign.key --tlog-upload=false --recursive ${IMAGE}@$(cat image.dgst)
+    - cosign sign --key cosign.key --tlog-upload=false --recursive ${IMAGE}@${IMAGE_DIGEST}
   artifacts:
     paths:
       - cosign.pub
+
+# MegaLinter GitLab CI job configuration file
+# More info at https://megalinter.io/
+megalinter:
+  stage: test
+  allow_failure: true
+  # You can override MegaLinter flavor used to have faster performances
+  # More info at https://megalinter.io/flavors/
+  image: ${REGISTRY}/docker/oxsecurity/megalinter-security:v8.8.0
+  script: ["/bin/bash /entrypoint.sh"]
+  variables:
+    # All available variables are described in documentation
+    # https://megalinter.io/configuration/
+    DEFAULT_WORKSPACE: $CI_PROJECT_DIR
+    # ADD YOUR CUSTOM ENV VARIABLES HERE TO OVERRIDE VALUES OF .mega-linter.yml AT THE ROOT OF YOUR REPOSITORY
+    SARIF_REPORTER: "true"
+    GRYPE_DB_UPDATE_URL: http://grype-db.default.svc.cluster.local:8080
+  artifacts:
+    when: always
+    paths:
+      - megalinter-reports
+    expire_in: 1 week
 
 include:
   - template: Jobs/SAST.gitlab-ci.yml
@@ -159,6 +185,19 @@ govulncheck:
     SO_PARSER_NAME: SARIF
   needs:
     - job: test
+      artifacts: true
+
+megalinter-reports:
+  extends: .importer
+  stage: test
+  variables:
+    SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
+    SO_PRODUCT_NAME: SMTP Sidecar
+    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${IMAGE}
+    SO_FILE_NAME: megalinter-reports/megalinter-report.sarif
+    SO_PARSER_NAME: SARIF
+  needs:
+    - job: megalinter
       artifacts: true
 
 semgrep:
@@ -188,9 +227,9 @@ trivy:
   extends: .trivy_image
   needs:
     - job: deploy
-      artifacts: false
+      artifacts: true
   variables:
-    TARGET: ${IMAGE}
+    TARGET: ${IMAGE}@${IMAGE_DIGEST}
     REPORT_NAME: trivy.json
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
     SO_PRODUCT_NAME: SMTP Sidecar
