@@ -140,28 +140,6 @@ sign:
     paths:
       - cosign.pub
 
-# MegaLinter GitLab CI job configuration file
-# More info at https://megalinter.io/
-megalinter:
-  stage: test
-  allow_failure: true
-  # You can override MegaLinter flavor used to have faster performances
-  # More info at https://megalinter.io/flavors/
-  image: ${REGISTRY}/docker/oxsecurity/megalinter-security:v8.8.0
-  script: ["/bin/bash /entrypoint.sh"]
-  variables:
-    # All available variables are described in documentation
-    # https://megalinter.io/configuration/
-    DEFAULT_WORKSPACE: $CI_PROJECT_DIR
-    # ADD YOUR CUSTOM ENV VARIABLES HERE TO OVERRIDE VALUES OF .mega-linter.yml AT THE ROOT OF YOUR REPOSITORY
-    SARIF_REPORTER: "true"
-    GRYPE_DB_UPDATE_URL: http://grype-db.default.svc.cluster.local:8080
-  artifacts:
-    when: always
-    paths:
-      - megalinter-reports
-    expire_in: 1 week
-
 include:
   - template: Jobs/SAST.gitlab-ci.yml
   - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/main/templates/importer.yml
@@ -174,7 +152,6 @@ govulncheck:
   extends: .importer
   variables:
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
-    SO_PRODUCT_NAME: SMTP Sidecar
     SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${IMAGE}
     SO_FILE_NAME: vulns.sarif.json
     SO_PARSER_NAME: SARIF
@@ -182,24 +159,10 @@ govulncheck:
     - job: test
       artifacts: true
 
-megalinter-reports:
-  extends: .importer
-  stage: test
-  variables:
-    SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
-    SO_PRODUCT_NAME: SMTP Sidecar
-    SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${IMAGE}
-    SO_FILE_NAME: megalinter-reports/megalinter-report.sarif
-    SO_PARSER_NAME: SARIF
-  needs:
-    - job: megalinter
-      artifacts: true
-
 semgrep:
   extends: .semgrep
   variables:
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
-    SO_PRODUCT_NAME: SMTP Sidecar
     SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${IMAGE}
     CONFIGURATION: ${SEMGREP_CONFIG}
     TARGET: .
@@ -214,7 +177,6 @@ grype:
     TARGET: sbom-amd64.json
     REPORT_NAME: grype.json
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
-    SO_PRODUCT_NAME: SMTP Sidecar
     SO_ORIGIN_DOCKER_IMAGE_NAME_TAG: ${IMAGE}
     SO_SUPPRESS_LICENSES: "false"
 
@@ -227,7 +189,6 @@ trivy:
     TARGET: ${IMAGE}@${IMAGE_DIGEST}
     REPORT_NAME: trivy.json
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
-    SO_PRODUCT_NAME: SMTP Sidecar
     TRIVY_USERNAME: ${REGISTRY_USER}
     TRIVY_PASSWORD: ${REGISTRY_AUTH}
     SO_SUPPRESS_LICENSES: "false"
@@ -236,5 +197,4 @@ trivy:
 check:
   extends: .check_security_gate
   variables:
-    SO_PRODUCT_NAME: SMTP Sidecar
     SO_BRANCH_NAME: ${CI_COMMIT_BRANCH}
