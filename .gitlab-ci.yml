@@ -6,7 +6,7 @@ workflow:
       when: always
       variables:
         IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}:latest
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH
       when: always
       variables:
         IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}:${CI_COMMIT_REF_SLUG}
