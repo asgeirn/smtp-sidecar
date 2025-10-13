@@ -2,16 +2,14 @@ image: ${REGISTRY}/docker/library/golang:1.25.0-trixie
 
 workflow:
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: always
-      variables:
-        IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}:mr-${CI_MERGE_REQUEST_IID}
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
-      when: never
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
       variables:
         IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}:latest
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
+      variables:
+        IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}:${CI_COMMIT_REF_SLUG}
 
 .go-cache:
   variables:
@@ -54,16 +52,13 @@ test:
     OTEL_SERVICE_NAME: ${CI_PROJECT_NAME}
     OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-cluster-opentelemetry-collector.default:4317
   script:
-    - go install github.com/jstemmer/go-junit-report/v2@latest
-    - go install github.com/mdelapenya/junit2otlp@latest
-    - go install golang.org/x/vuln/cmd/govulncheck@latest
     - go fmt $(go list ./... | grep -v /vendor/)
     - go vet $(go list ./... | grep -v /vendor/)
-    - $GOPATH/bin/govulncheck -format sarif ./... > vulns.sarif.json
+    - go tool golang.org/x/vuln/cmd/govulncheck -format sarif ./... > vulns.sarif.json
     - |
       go test -race -json $(go list ./... | grep -v /vendor/) 2>&1 | \
-      $GOPATH/bin/go-junit-report -parser gojson | tee report.xml | \
-      $GOPATH/bin/junit2otlp
+      go tool github.com/jstemmer/go-junit-report/v2 -parser gojson | tee report.xml | \
+      go tool github.com/mdelapenya/junit2otlp
   artifacts:
     paths:
       - vulns.sarif.json
@@ -169,11 +164,11 @@ megalinter:
 
 include:
   - template: Jobs/SAST.gitlab-ci.yml
-  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/importer.yml
-  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SAST/semgrep.yml
-  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SCA/grype_sbom.yml
-  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SCA/trivy_image.yml
-  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/check_security_gate.yml
+  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/main/templates/importer.yml
+  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/main/templates/SAST/semgrep.yml
+  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/main/templates/SCA/grype_sbom.yml
+  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/main/templates/SCA/trivy_image.yml
+  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/main/templates/check_security_gate.yml
 
 govulncheck:
   extends: .importer
