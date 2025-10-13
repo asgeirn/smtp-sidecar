@@ -169,11 +169,11 @@ megalinter:
 
 include:
   - template: Jobs/SAST.gitlab-ci.yml
-  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/importer.yml
-  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SAST/semgrep.yml
-  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SCA/grype_sbom.yml
-  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/SCA/trivy_image.yml
-  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/refs/heads/dev/templates/check_security_gate.yml
+  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/main/templates/importer.yml
+  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/main/templates/SAST/semgrep.yml
+  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/main/templates/SCA/grype_sbom.yml
+  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/main/templates/SCA/trivy_image.yml
+  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/main/templates/check_security_gate.yml
 
 govulncheck:
   extends: .importer
