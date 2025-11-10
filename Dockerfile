@@ -5,7 +5,9 @@
 #RUN go build
 
 FROM scratch
-EXPOSE 25
+USER 1000
+EXPOSE 2525
 COPY smtp-sidecar /
-ENV SMTP_LISTEN=:25
+ENV SMTP_LISTEN=:2525
+HEALTHCHECK NONE
 ENTRYPOINT [ "/smtp-sidecar" ]
