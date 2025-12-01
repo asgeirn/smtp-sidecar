@@ -2,10 +2,6 @@ image: ${REGISTRY}/docker/library/golang:1.25.3-trixie
 
 workflow:
   rules:
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: always
-      variables:
-        IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}:latest
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH
       when: always
       variables:
