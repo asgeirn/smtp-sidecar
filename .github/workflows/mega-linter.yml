@@ -2,6 +2,8 @@
 # MegaLinter GitHub Action configuration file
 # More info at https://megalinter.io
 name: MegaLinter
+permissions:
+  contents: read
 
 on:
   # Trigger mega-linter at every push. Action will also be visible from Pull Requests to main
