@@ -1,11 +1,7 @@
-image: ${REGISTRY}/docker/library/golang:1.25.3-trixie
+image: ${REGISTRY}/docker/library/golang:1.25.5-trixie
 
 workflow:
   rules:
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: always
-      variables:
-        IMAGE: ${REGISTRY}/${CI_PROJECT_PATH}:latest
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH
       when: always
       variables:
@@ -142,11 +138,11 @@ sign:
 
 include:
   - template: Jobs/SAST.gitlab-ci.yml
-  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/main/templates/importer.yml
-  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/main/templates/SAST/semgrep.yml
-  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/main/templates/SCA/grype_sbom.yml
-  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/main/templates/SCA/trivy_image.yml
-  - remote: https://raw.githubusercontent.com/MaibornWolff/secobserve_actions_templates/main/templates/check_security_gate.yml
+  - remote: https://raw.githubusercontent.com/SecObserve/secobserve_actions_templates/main/templates/importer.yml
+  - remote: https://raw.githubusercontent.com/SecObserve/secobserve_actions_templates/main/templates/SAST/semgrep.yml
+  - remote: https://raw.githubusercontent.com/SecObserve/secobserve_actions_templates/main/templates/SCA/grype_sbom.yml
+  - remote: https://raw.githubusercontent.com/SecObserve/secobserve_actions_templates/main/templates/SCA/trivy_image.yml
+  - remote: https://raw.githubusercontent.com/SecObserve/secobserve_actions_templates/main/templates/check_security_gate.yml
 
 govulncheck:
   extends: .importer

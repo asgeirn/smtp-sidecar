@@ -1,6 +1,6 @@
 module twingine.no/smtp-sidecar/v2
 
-go 1.25.3
+go 1.25.5
 
 require (
 	github.com/caarlos0/env/v11 v11.3.1
