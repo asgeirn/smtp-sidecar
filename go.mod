@@ -5,7 +5,7 @@ go 1.25.5
 require (
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/mhale/smtpd v0.8.3
-	golang.org/x/oauth2 v0.34.0
+	golang.org/x/oauth2 v0.35.0
 	google.golang.org/api v0.264.0
 )
 
