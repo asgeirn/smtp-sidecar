@@ -1,4 +1,4 @@
-image: ${REGISTRY}/docker/library/golang:1.25.6-trixie
+image: ${REGISTRY}/docker/library/golang:1.25.7-trixie
 
 workflow:
   rules:
