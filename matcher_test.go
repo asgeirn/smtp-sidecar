@@ -160,7 +160,7 @@ func TestMatchAnyPatternPerformance(t *testing.T) {
 
 	// Create a large number of patterns
 	var patternStrings []string
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		patternStrings = append(patternStrings, fmt.Sprintf("pattern%d.*", i))
 	}
 

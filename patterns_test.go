@@ -123,7 +123,7 @@ func TestConvertToRegexPatternsEdgeCases(t *testing.T) {
 	t.Run("Large number of patterns", func(t *testing.T) {
 		// Create a string with 100 patterns
 		var patterns []string
-		for i := 0; i < 100; i++ {
+		for i := range 100 {
 			patterns = append(patterns, "pattern"+string(rune('a'+i%26)))
 		}
 		input := strings.Join(patterns, ",")
