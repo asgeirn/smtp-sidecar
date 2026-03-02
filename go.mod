@@ -6,7 +6,7 @@ require (
 	github.com/caarlos0/env/v11 v11.4.0
 	github.com/mhale/smtpd v0.8.3
 	golang.org/x/oauth2 v0.35.0
-	google.golang.org/api v0.267.0
+	google.golang.org/api v0.268.0
 )
 
 require (
