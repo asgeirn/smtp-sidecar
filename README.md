@@ -1,3 +1,3 @@
 # smtp-sidecar
 
-This project has moved to [gitlab.twingine.com/asgeir/smtp-sidecar](https://gitlab.twingine.com/asgeir/smtp-sidecar).
+This project has moved to [pushin.eu/asgeirn/smtp-sidecar](https://pushin.eu/asgeirn/smtp-sidecar).
